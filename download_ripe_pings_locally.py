@@ -4,6 +4,8 @@ import pdb
 from datetime import datetime
 from ripe.atlas.cousteau import AtlasResultsRequest
 
+ANALYSIS_DIR = "."
+
 def get_raw_pings(destination="microsoft_v4", start=(2016, 01, 01), end=(2016, 02, 01)):
     if destination == "microsoft_v4":
         msm_id = 2240465
@@ -28,10 +30,10 @@ def get_raw_pings(destination="microsoft_v4", start=(2016, 01, 01), end=(2016, 0
 
 year = int(sys.argv[1])
 for month in range(1, 13):
-    if os.path.isfile("/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" % (year, month)):
-        print "Exists", "/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" % (year, month)
+    if os.path.isfile(ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month)):
+        print "Exists", ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month)
         continue
-    fd = open("/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" % (year, month), "w")
+    fd = open(ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month), "w")
     for day in range(1, 32):
         print "Year: %d, month: %d, day: %d" % (year, month, day)
         raw_msft_pings = get_raw_pings("microsoft_v4", (year,month,day), (year, month, day+1))
