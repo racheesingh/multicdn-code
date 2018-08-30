@@ -1,6 +1,6 @@
 import json
 import subprocess
-with open("rev_dns_mappings.json") as fi:
+with open("preprocessed_metadata/rev_dns_mappings.json") as fi:
     ip_to_rev_dns = json.load(fi)
 
 ip_to_ww = {}

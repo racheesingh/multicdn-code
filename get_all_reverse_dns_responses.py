@@ -22,5 +22,5 @@ for year in [2015,2016,2017,2018]:
                 rev_dns_mapping[dst_addr] = rev_dns
                 print dst_addr, rev_dns
             
-with open("rev_dns_mappings.json", "w") as fi:
+with open("preprocessed_metadata/rev_dns_mappings.json", "w") as fi:
     json.dump(rev_dns_mapping, fi)
