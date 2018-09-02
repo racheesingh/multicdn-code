@@ -1,20 +1,67 @@
+import radix
 from datetime import datetime
 import os
 import csv
 import json
 import geoip2.database
 
-if os.path.exists("dst_asn_to_edgecache_mapping_msft_v4.json"):
-    with open("dst_asn_to_edgecache_mapping_msft_v4.json") as fi:
-        dst_asn_to_edgecache_mapping_raw = json.load(fi)
+rtree_bgpv4 = radix.Radix()
+asn_to_prefs = {}
+with open("data/routeviews-rv2-20180218-1200.pfx2as") as fi:
+    for line in fi:
+        ip, preflen, asn = line.split()
+        if asn in asn_to_prefs:
+            asn_to_prefs[asn].append("%s/%s" % (ip, preflen))
+        else:
+            asn_to_prefs[asn] = ["%s/%s" % (ip, preflen)]
+        if ',' in asn:
+            tokens = asn.split(',')
+            asn = tokens[0]
+        if '_' in asn:
+            tokens = asn.split('_')
+            asn = tokens[0]
+        rnode = rtree_bgpv4.add(network=ip, masklen=int(preflen))
+        rnode.data["asn"] = asn
+        
+def ip2asn_bgp(ip, v6=False):
+    if v6:
+        try:
+            node = rtree_bgpv6.search_best(ip)
+        except ValueError:
+            print "Could not get AS for IP", ip
+            return None
+    else:
+        try:
+            node = rtree_bgpv4.search_best(ip)
+        except ValueError:
+            print "Could not get AS for IP", ip
+            return None
+    if node:
+        return node.data['asn']
+    else:
+        return None
+    
+def ip_to_pref(ip):
+    try:
+        node = rtree_bgpv4.search_best(ip)
+    except ValueError:
+        print "Could not get prefix for IP", ip
+        return None
+
+    if node:
+        return node
+    else:
+        return None
+
 cc_to_ctn = {}
-with open("country_continent.csv") as fi:
+with open("data/country_continent.csv") as fi:
     reader = csv.reader(fi)
     for row in reader:
         cc_to_ctn[row[0]] = row[1]
 cc_to_ctn['CW'] = 'SA'
 cc_to_ctn['SS'] = 'AF'
-with open("asn_to_cc") as fi:
+
+with open("data/asn_to_cc") as fi:
     asn_to_cc = json.load(fi)
 
 reader = geoip2.database.Reader('GeoLite2-Country_20171107/GeoLite2-Country.mmdb')
@@ -30,9 +77,10 @@ def ip_to_cc(ip):
 cn_full_name = {'NA': "North America", "AS": "Asia", "OC": "Oceania",
                 "AF": "Africa", "EU": "Europe", "SA": "South America",
                 "None": "None"}
+
 orgs = {}
 orgs_info = {}
-with open("20161001.as-org2info.txt", "rb") as f:
+with open("data/20161001.as-org2info.txt", "rb") as f:
     for line in f:
         # ignore commented lines
         if line[0] == "#":
@@ -69,44 +117,28 @@ def is_popcdn(dst_asn):
     popcdn_cache[dst_asn] = False
     return False
 
-with open("dst_ip_to_hostname_whatweb_msft_v4.json") as fi:
-    dst_ip_to_hostname_whatweb = json.load(fi)
+with open("processed_metadata/rev_dns_mappings.json") as fi:
+    rev_dns_map = json.load(fi)
+
+with open("processed_metadata/ip_to_ww.json") as fi:
+    ww_map = json.load(fi)
 
 dst_asn_to_edgecache_mapping = {}   
 dst_asn_to_edgecache_mapping_failed = {}
-def check_if_edgecache(src_asn, dst_asn, rev_dns_hostname, dst_ip):
-    # Level3 and a couple of others that never resolve via WhatWeb, might as well
-    # save time and not check.
-    if int(dst_asn) == 3356 or int(dst_asn) == 5511 or int(dst_asn) == 3549:
-        return False, None
-    if dst_asn in dst_asn_to_edgecache_mapping:
-        dst_asn_map = dst_asn_to_edgecache_mapping[dst_asn]
-        # tokens = dst_asn_map.split(', ')
-        # tcc = tokens[-1]
-        # tokens = dst_asn_map.split('-')
-        # try:
-        #     tname = tokens[0] + '-' + tokens[1]
-        # except IndexError:
-        #     tname = dst_asn_map
-        # print "premature:", tname
-        # return True, tname + ', ' + tcc
-        if dst_asn_map:
-            return True, dst_asn_map
-        else:
-            return False, None
-        
-    # Retrial for the same destination ASN is useful in case one
-    # IP address from the ASN resolves. However after 4 attempts,
-    # I am reasonably sure it won't so I let's stop.
-    if dst_asn in dst_asn_to_edgecache_mapping_failed:
-        if dst_asn_to_edgecache_mapping_failed[dst_asn] >= 4:
-            return False, None
-        
+def check_if_edgecache(src_asn, dst_ip):
     is_ec = False
     typ_ec = None
-    
+    rev_dns_hostname = rev_dns_map[dst_ip]
+    if not rev_dns_hostname:
+        if dst_ip in ww_map:
+            ww_hostname = ww_map[dst_ip]
+        else:
+            ww_hostname = None
+
+    dst_asn = ip2asn_bgp(dst_ip)
     if src_asn == dst_asn:
         is_ec = True
+    
     elif dst_asn in probes_per_asn and probes_per_asn[dst_asn]:
         # If destination ASN hosts a non-anchoring RIPE probe, this
         # destination AS is likely an edge cache. Accuracy of this
