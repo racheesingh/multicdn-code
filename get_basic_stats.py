@@ -61,7 +61,7 @@ for ts in per_ts_src_prefix:
     for ctn in per_ctn_counts:
         src_ctn_pfx_counts.append([ts, ctn, per_ctn_counts[ctn]])
     
-with open("processed_data/per_src_ctn_pfx_counts.csv", "w") as fi:
+with open("/nfs/kenny/data1/rachee/multicdn/processed_data/per_src_ctn_pfx_counts.csv", "w") as fi:
     writer = csv.writer(fi)
     writer.writerows(src_ctn_pfx_counts)
 
@@ -74,7 +74,7 @@ for ts in per_ts_dst_prefix:
         if not server_cc:
             server_cc = 'Other'
         else:
-            server_ctn = cc_to_tn[server_cc]
+            server_ctn = cc_to_ctn[server_cc]
             server_ctn = cn_full_name[server_ctn]
         if server_ctn not in per_ctn_counts:
             per_ctn_counts[server_ctn] = 0
@@ -82,7 +82,7 @@ for ts in per_ts_dst_prefix:
     for ctn in per_ctn_counts:
         dst_ctn_pfx_counts.append([ts, ctn, per_ctn_counts[ctn]])
 
-with open("processed_data/per_dst_ctn_pfx_counts.csv", "w") as fi:
+with open("/nfs/kenny/data1/rachee/multicdn/processed_data/per_dst_ctn_pfx_counts.csv", "w") as fi:
     writer = csv.writer(fi)
     writer.writerows(dst_ctn_pfx_counts)
     

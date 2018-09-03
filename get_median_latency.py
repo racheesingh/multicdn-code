@@ -1,3 +1,4 @@
+import pdb
 import numpy as np
 from api import *
 from datetime import datetime
@@ -25,13 +26,18 @@ for year in [2015, 2016, 2017, 2018]:
                 recd = int(row[2])
                 src_ip = row[3]
                 dst_ip = row[4]
-                rtt = row[5]
+                rtt = float(row[5])
+                if rtt < 0 : continue
                 client_cc, _ = ip_to_cc(src_ip)
                 if not client_cc:
                     client_ctn = 'Other'
                 else:
-                    client_ctn = cc_to_ctn[client_cc]
-                    client_ctn = cn_full_name[client_ctn]
+                    try:
+                        client_ctn = cc_to_ctn[client_cc]
+                        client_ctn = cn_full_name[client_ctn]
+                    except:
+                        print "Could not resolve", client_cc
+                        client_ctn = 'Other'
                 if ts not in per_day_median:
                     per_day_median[ts] = {}
                 if client_ctn not in per_day_median[ts]:
@@ -39,6 +45,6 @@ for year in [2015, 2016, 2017, 2018]:
                 per_day_median[ts][client_ctn].append(rtt)
     for ts in per_day_median:
         for ctn in per_day_median[ts]:
-            fd.write(",".join([ts, ctn, np.median(per_day_median[ts][ctn])]) + "\n")
+            fd.write(",".join([str(ts), str(ctn), str(np.median(per_day_median[ts][ctn]))]) + "\n")
 fd.close()
             
