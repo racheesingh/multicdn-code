@@ -4,12 +4,17 @@ import pdb
 from datetime import datetime
 from ripe.atlas.cousteau import AtlasResultsRequest
 
-ANALYSIS_DIR = "."
+destination_type = raw_input("Enter destination name (msft_v4, msft_v6, apple): ")
+year = raw_input("Enter year for which data will be fetched (2015, 2016, 2017, 2018): ")
+year = int(year.strip())
+ANALYSIS_DIR = raw_input("Enter analysis directory to download files to: ")
+if not os.path.exists(ANALYSIS_DIR + "/raw_data/%s" % destination_type):
+    os.makedirs(ANALYSIS_DIR + "/raw_data/%s" % destination_type)
 
-def get_raw_pings(destination="microsoft_v4", start=(2016, 01, 01), end=(2016, 02, 01)):
-    if destination == "microsoft_v4":
+def get_raw_pings(destination="msft_v4", start=(2016, 01, 01), end=(2016, 02, 01)):
+    if destination == "msft_v4":
         msm_id = 2240465
-    elif destination == "microsoft_v6":
+    elif destination == "msft_v6":
         msm_id = 2240487
     else:
         assert destination == "apple"
@@ -28,15 +33,14 @@ def get_raw_pings(destination="microsoft_v4", start=(2016, 01, 01), end=(2016, 0
     else:
         return []
 
-year = int(sys.argv[1])
 for month in range(1, 13):
-    if os.path.isfile(ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month)):
-        print "Exists", ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month)
+    if os.path.isfile(ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month)):
+        print "Exists", ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month)
         continue
-    fd = open(ANALYSIS_DIR + "/raw_data/msft_v4/%s/%s" % (year, month), "w")
+    fd = open(ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month), "w")
     for day in range(1, 32):
         print "Year: %d, month: %d, day: %d" % (year, month, day)
-        raw_msft_pings = get_raw_pings("microsoft_v4", (year,month,day), (year, month, day+1))
+        raw_msft_pings = get_raw_pings(destination_type, (year,month,day), (year, month, day+1))
         print "Num pings", len(raw_msft_pings)
         if raw_msft_pings:
             for ping_mmt in raw_msft_pings:
