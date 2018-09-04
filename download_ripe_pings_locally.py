@@ -1,3 +1,4 @@
+import pytz
 import os
 import sys
 import pdb
@@ -11,7 +12,7 @@ ANALYSIS_DIR = raw_input("Enter analysis directory to download files to: ")
 if not os.path.exists(ANALYSIS_DIR + "/raw_data/%s" % destination_type):
     os.makedirs(ANALYSIS_DIR + "/raw_data/%s" % destination_type)
 
-def get_raw_pings(destination="msft_v4", start=(2016, 01, 01), end=(2016, 02, 01)):
+def get_raw_pings(destination="msft_v4", start=(2016, 01, 01)):
     if destination == "msft_v4":
         msm_id = 2240465
     elif destination == "msft_v6":
@@ -22,10 +23,11 @@ def get_raw_pings(destination="msft_v4", start=(2016, 01, 01), end=(2016, 02, 01
     try:
         kwargs = {
             "msm_id": msm_id, 
-            "start": datetime(start[0], start[1], start[2]),
-            "stop": datetime(end[0], end[1], end[2])
+            "start": datetime(start[0], start[1], start[2], 0,0, 0, 0, pytz.UTC),
+            "stop": datetime(start[0], start[1], start[2], 23, 59, 59, 0, pytz.UTC)
             }
-    except ValueError:
+    except ValueError, e:
+        print start, e
         return []
     is_success, results = AtlasResultsRequest(**kwargs).create()
     if is_success:
@@ -40,7 +42,7 @@ for month in range(1, 13):
     fd = open(ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month), "w")
     for day in range(1, 32):
         print "Year: %d, month: %d, day: %d" % (year, month, day)
-        raw_msft_pings = get_raw_pings(destination_type, (year,month,day), (year, month, day+1))
+        raw_msft_pings = get_raw_pings(destination_type, (year,month,day))
         print "Num pings", len(raw_msft_pings)
         if raw_msft_pings:
             for ping_mmt in raw_msft_pings:

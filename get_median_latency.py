@@ -47,4 +47,3 @@ for year in [2015, 2016, 2017, 2018]:
         for ctn in per_day_median[ts]:
             fd.write(",".join([str(ts), str(ctn), str(np.median(per_day_median[ts][ctn]))]) + "\n")
 fd.close()
-            

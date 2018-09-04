@@ -1,3 +1,5 @@
+import pytz
+import pdb
 '''
 Gets basic statistics about the data:
 1. Get number of unique prefixes (both client and server) per day for each continenet
@@ -12,8 +14,8 @@ import json
 per_ts_src_prefix = {}
 per_ts_errors = {}
 per_ts_dst_prefix = {}
-# for year in [2015]:
-for year in [2015, 2016, 2017, 2018]:
+for year in [2015]:
+# for year in [2015, 2016, 2017, 2018]:
     for month in range(1, 13):
         if os.path.getsize("/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" %
                            (year, month)) == 0: continue
@@ -22,7 +24,8 @@ for year in [2015, 2016, 2017, 2018]:
             reader = csv.reader(fi)
             for row in reader:
                 ts = int(row[0])
-                rounded_down_day = datetime.fromtimestamp(ts).replace(second=0, minute=0, hour=0)
+                rounded_down_day = datetime.fromtimestamp(ts,
+                                            tz=pytz.UTC).replace(second=0, minute=0, hour=0)
                 rounded_down_day_ts = int(time.mktime(rounded_down_day.timetuple()))
                 recd = int(row[2])
                 src_ip = row[3]
@@ -39,11 +42,12 @@ for year in [2015, 2016, 2017, 2018]:
                 if rounded_down_day_ts not in per_ts_dst_prefix:
                     per_ts_dst_prefix[rounded_down_day_ts] = []
                 per_ts_dst_prefix[rounded_down_day_ts].append(dst_pref)
-                
+
 src_ctn_pfx_counts= [["ts", "ctn", "count"]]
-for ts in per_ts_src_prefix:
+for ts in sorted(per_ts_src_prefix.keys()):
     per_ctn_counts = {}
     src_prefix_set = list(set(per_ts_src_prefix[ts]))
+    print ts
     for pref in src_prefix_set:
         client_cc, _ = ip_to_cc(pref)
         if not client_cc:
