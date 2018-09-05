@@ -6,18 +6,21 @@ import time
 import os
 import csv
 import json
+provider_name = raw_input("Enter CDN provider name (e.g.: msft_v4, msft_v6, apple): ")
 
-fd = open("/nfs/kenny/data1/rachee/multicdn/processed_data/per_day_median.csv", "w")
+fd = open("/nfs/kenny/data1/rachee/multicdn/processed_data/per_day_median_%s.csv" % provider_name,
+          "w")
 per_ts_src_prefix = {}
 per_ts_errors = {}
 per_ts_dst_prefix = {}
 for year in [2015, 2016, 2017, 2018]:
     per_day_median = {}
     for month in range(1, 13):
-        if os.path.getsize("/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" %
-                           (year, month)) == 0: continue
+        if os.path.getsize("/nfs/kenny/data1/rachee/multicdn/raw_data/%s/%s/%s" %
+                           (provider_name, year, month)) == 0: continue
         print "year: %s, month: %s" % (year, month)
-        with open("/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%s/%s" % (year, month)) as fi:
+        with open("/nfs/kenny/data1/rachee/multicdn/raw_data/%s/%s/%s" %
+                  (provider_name, year, month)) as fi:
             reader = csv.reader(fi)
             for row in reader:
                 ts = int(row[0])
