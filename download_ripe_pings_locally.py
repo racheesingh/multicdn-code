@@ -1,3 +1,4 @@
+import json
 import pytz
 import os
 import sys
@@ -35,11 +36,18 @@ def get_raw_pings(destination="msft_v4", start=(2016, 01, 01)):
     else:
         return []
 
+if os.path.isfile("processed_metadata/probe_uptime_%s.json" % destination_type):
+    with open("processed_metadata/probe_uptime_%s.json" % destination_type) as fi:
+        probe_uptime = json.load(fi)
+else:
+    probe_uptime = {}
+    
 for month in range(1, 13):
     if os.path.isfile(ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month)):
         print "Exists", ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month)
         continue
     fd = open(ANALYSIS_DIR + "/raw_data/%s/%s/%s" % (destination_type, year, month), "w")
+    fd.write("ts, sent, recd, src, dst, min, max, avg, prb_id\n")
     for day in range(1, 32):
         print "Year: %d, month: %d, day: %d" % (year, month, day)
         raw_msft_pings = get_raw_pings(destination_type, (year,month,day))
@@ -48,6 +56,14 @@ for month in range(1, 13):
             try:
                 for  ping_mmt in raw_msft_pings:
                     ts = str(ping_mmt['timestamp'])
+                    probe_id = str(ping_mmt['prb_id'])
+                    if probe_id not in probe_uptime:
+                        probe_uptime[probe_id] = {'fs': ts, 'ls': ts, 'uptime': 1}
+                    else:
+                        # Assumption is that the pings will be downloaded in
+                        # the increasing order of year (2015, followed by 2016 and so on)
+                        probe_uptime[probe_id]['ls'] = ts
+                        probe_uptime[probe_id]['uptime'] += 1
                     sent = str(ping_mmt['sent'])
                     rcvd = str(ping_mmt['rcvd'])
                     min_rtt = str(ping_mmt['min'])
@@ -59,8 +75,10 @@ for month in range(1, 13):
                     else:
                         dst_ip = ping_mmt['dst_addr']
                     fd.write(",".join([ts, sent, rcvd,
-                                       src_ip, dst_ip, min_rtt, max_rtt, avg_rtt]) + "\n")
-            except:
-                print "Error:"
+                                       src_ip, dst_ip, min_rtt, max_rtt, avg_rtt, probe_id]) + "\n")
+            except Exception as e:
+                print "Error:", e
     fd.close()
                          
+with open("processed_metadata/probe_uptime_%s.json" % destination_type, "w") as fi:
+    json.dump(probe_uptime, fi)

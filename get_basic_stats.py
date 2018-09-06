@@ -84,7 +84,7 @@ for ts in per_ts_dst_prefix:
         else:
             server_ctn = cc_to_ctn[server_cc]
             server_ctn = cn_full_name[server_ctn]
-        if server_ctn not in per_ctn_counts:
+        if client_ctn not in per_ctn_counts:
             per_ctn_counts[server_ctn] = 0
         per_ctn_counts[server_ctn] += 1
     for ctn in per_ctn_counts:
