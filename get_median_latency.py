@@ -23,8 +23,9 @@ for year in [2015, 2016, 2017, 2018]:
                   (provider_name, year, month)) as fi:
             reader = csv.reader(fi)
             for row in reader:
-                ts = int(row[0])
-                rounded_down_day = datetime.fromtimestamp(ts).replace(second=0, minute=0, hour=0)
+                ts_raw = int(row[0])
+                rounded_down_day = datetime.fromtimestamp(ts_raw).replace(second=0,
+                                                                      minute=0, hour=0, day=1)
                 rounded_down_day_ts = int(time.mktime(rounded_down_day.timetuple()))
                 recd = int(row[2])
                 src_ip = row[3]
@@ -41,11 +42,11 @@ for year in [2015, 2016, 2017, 2018]:
                     except:
                         print "Could not resolve", client_cc
                         client_ctn = 'Other'
-                if ts not in per_day_median:
-                    per_day_median[ts] = {}
-                if client_ctn not in per_day_median[ts]:
-                    per_day_median[ts][client_ctn] = []
-                per_day_median[ts][client_ctn].append(rtt)
+                if rounded_down_day_ts not in per_day_median:
+                    per_day_median[rounded_down_day_ts] = {}
+                if client_ctn not in per_day_median[rounded_down_day_ts]:
+                    per_day_median[rounded_down_day_ts][client_ctn] = []
+                per_day_median[rounded_down_day_ts][client_ctn].append(rtt)
     for ts in per_day_median:
         for ctn in per_day_median[ts]:
             fd.write(",".join([str(ts), str(ctn), str(np.median(per_day_median[ts][ctn]))]) + "\n")

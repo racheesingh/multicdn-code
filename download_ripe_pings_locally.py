@@ -45,18 +45,22 @@ for month in range(1, 13):
         raw_msft_pings = get_raw_pings(destination_type, (year,month,day))
         print "Num pings", len(raw_msft_pings)
         if raw_msft_pings:
-            for ping_mmt in raw_msft_pings:
-                ts = str(ping_mmt['timestamp'])
-                sent = str(ping_mmt['sent'])
-                rcvd = str(ping_mmt['rcvd'])
-                min_rtt = str(ping_mmt['min'])
-                max_rtt = str(ping_mmt['max'])
-                avg_rtt = str(ping_mmt['avg'])
-                src_ip = ping_mmt['from']
-                if 'dst_addr' not in ping_mmt:
-                    dst_ip = "DNS_FAIL"
-                else:
-                    dst_ip = ping_mmt['dst_addr']
-                fd.write(",".join([ts, sent, rcvd, src_ip, dst_ip, min_rtt, max_rtt, avg_rtt]) + "\n")
+            try:
+                for  ping_mmt in raw_msft_pings:
+                    ts = str(ping_mmt['timestamp'])
+                    sent = str(ping_mmt['sent'])
+                    rcvd = str(ping_mmt['rcvd'])
+                    min_rtt = str(ping_mmt['min'])
+                    max_rtt = str(ping_mmt['max'])
+                    avg_rtt = str(ping_mmt['avg'])
+                    src_ip = ping_mmt['from']
+                    if 'dst_addr' not in ping_mmt:
+                        dst_ip = "DNS_FAIL"
+                    else:
+                        dst_ip = ping_mmt['dst_addr']
+                    fd.write(",".join([ts, sent, rcvd,
+                                       src_ip, dst_ip, min_rtt, max_rtt, avg_rtt]) + "\n")
+            except:
+                print "Error:"
     fd.close()
                          
