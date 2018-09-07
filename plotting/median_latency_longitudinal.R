@@ -18,29 +18,37 @@ common_theme <- function(p) {
 		
   p
 }
-
+shade_x_min <- as.POSIXct(sprintf("%s", '2015-08-01'), format="%Y-%m-%d", origin="1970-01-01")
+shade_x_max <- as.POSIXct(sprintf("%s", '2018-08-01'), format="%Y-%m-%d", origin="1970-01-01")
 options(scipen=10000)
 df<-read.csv("/nfs/kenny/data1/rachee/multicdn/processed_data/per_day_median_msft_v4.csv",
 	header=TRUE)
 df$date <- as.POSIXct(df$ts, origin="1970-01-01", tz="UTC")
-shade_x_min <- as.POSIXct(sprintf("%s", '2017-01-01'), format="%Y-%m-%d", origin="1970-01-01")
-shade_x_max <- as.POSIXct(sprintf("%s", '2017-02-01'), format="%Y-%m-%d", origin="1970-01-01")
 df<-df[df$ctn %in% c('Europe', 'Asia', 'Africa', 'Oceania', 'North America', 'South America'),]
 p <- ggplot(data = df, aes(x=date, y=rtt, color=ctn)) + geom_line(size=1) +scale_colour_manual(values= c("#E41A1C","#984EA3","#377EB8","#4DAF4A","#FF7F00","#EDCB62"))
 p <- p + xlab("Time") + ylab("Median RTT (ms)") + scale_y_continuous(limits=c(0,200))
-p <- p + scale_x_datetime(breaks = date_breaks("2 month"), labels=date_format("%b %Y"))
+p <- p + scale_x_datetime(breaks = date_breaks("2 month"), limits=c(shade_x_min, shade_x_max), labels=date_format("%b %Y"))
 common_theme(p)
 ggsave("generated_plots/msft_v4_median_latency.png", width=8, height=6)
 
 df<-read.csv("/nfs/kenny/data1/rachee/multicdn/processed_data/per_day_median_msft_v6.csv",
 	header=TRUE)
 df$date <- as.POSIXct(df$ts, origin="1970-01-01", tz="UTC")
-shade_x_min <- as.POSIXct(sprintf("%s", '2017-01-01'), format="%Y-%m-%d", origin="1970-01-01")
-shade_x_max <- as.POSIXct(sprintf("%s", '2017-02-01'), format="%Y-%m-%d", origin="1970-01-01")
 df<-df[df$ctn %in% c('Europe', 'Asia', 'Africa', 'Oceania', 'North America', 'South America'),]
 p <- ggplot(data = df, aes(x=date, y=rtt, color=ctn)) + geom_line(size=1)+ scale_colour_manual(values= c("#E41A1C","#984EA3","#377EB8","#4DAF4A","#FF7F00","#EDCB62"))
 p <- p + xlab("Time") + ylab("Median RTT (ms)") + scale_y_continuous(limits=c(0,200))
-p <- p + scale_x_datetime(breaks = date_breaks("2 month"), labels=date_format("%b %Y"))
+p <- p + scale_x_datetime(breaks = date_breaks("2 month"), limits=c(shade_x_min, shade_x_max),
+  labels=date_format("%b %Y"))
 common_theme(p)
 ggsave("generated_plots/msft_v6_median_latency.png", width=8, height=6)
+
+df<-read.csv("/nfs/kenny/data1/rachee/multicdn/processed_data/per_day_median_apple.csv",
+	header=TRUE)
+df$date <- as.POSIXct(df$ts, origin="1970-01-01", tz="UTC")
+df<-df[df$ctn %in% c('Europe', 'Asia', 'Africa', 'Oceania', 'North America', 'South America'),]
+p <- ggplot(data = df, aes(x=date, y=rtt, color=ctn)) + geom_line(size=1)+ scale_colour_manual(values= c("#E41A1C","#984EA3","#377EB8","#4DAF4A","#FF7F00","#EDCB62"))
+p <- p + xlab("Time") + ylab("Median RTT (ms)")
+p <- p + scale_x_datetime(breaks = date_breaks("2 month"), limits=c(shade_x_min, shade_x_max), labels=date_format("%b %Y"))
+common_theme(p)
+ggsave("generated_plots/apple_median_latency.png", width=8, height=6)
 
