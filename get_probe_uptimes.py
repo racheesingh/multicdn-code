@@ -29,7 +29,7 @@ for probe in probe_uptime:
     fs = min(uptimes)
     ls = max(uptimes)
     uptime_hours = len(uptimes)
-    lifetime_hours = float(ls - fs)/(60*60.0)
+    lifetime_hours = float(ls - fs)/(60*60.0) + 1
     print lifetime_hours, uptime_hours
     if lifetime_hours > 0:
         availability = uptime_hours/float(lifetime_hours)
