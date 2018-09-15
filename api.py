@@ -23,6 +23,24 @@ with open("data/routeviews-rv2-20180218-1200.pfx2as") as fi:
         rnode = rtree_bgpv4.add(network=ip, masklen=int(preflen))
         rnode.data["asn"] = asn
         
+rtree_bgpv6 = radix.Radix()
+asn6_to_prefs = {}
+with open("data/routeviews-rv6-20180218-1200.pfx2as") as fi:
+    for line in fi:
+        ip, preflen, asn = line.split()
+        if asn in asn6_to_prefs:
+            asn6_to_prefs[asn].append("%s/%s" % (ip, preflen))
+        else:
+            asn6_to_prefs[asn] = ["%s/%s" % (ip, preflen)]
+        if ',' in asn:
+            tokens = asn.split(',')
+            asn = tokens[0]
+        if '_' in asn:
+            tokens = asn.split('_')
+            asn = tokens[0]
+        rnode = rtree_bgpv6.add(network=ip, masklen=int(preflen))
+        rnode.data["asn"] = asn
+        
 def ip2asn_bgp(ip, v6=False):
     if v6:
         try:
@@ -100,9 +118,12 @@ def get_asn_family(family_name="microsoft"):
     match_org_ids = [x[0] for x in orgs_ids_names if family_name in x[1].lower()]
     return match_org_ids
 
-popular_cdns = {'akamai', 'amazon', 'limelight', 'cdnetworks', 'bitgravity', 'google', 'chinacache'}
+popular_cdns = {'microsoft', 'akamai', 'amazon', 'limelight', 'cdnetworks', 'bitgravity',
+                'google', 'chinacache'}
 popcdn_cache = {}
 def is_popcdn(dst_asn):
+    if not dst_asn: return False
+    if dst_asn == 'None': return False
     if dst_asn in popcdn_cache:
         return popcdn_cache[dst_asn]
     if int(dst_asn) not in orgs:
@@ -122,6 +143,25 @@ with open("processed_metadata/rev_dns_mappings.json") as fi:
 
 with open("processed_metadata/ip_to_ww.json") as fi:
     ww_map = json.load(fi)
+
+def get_reverse_dns_map(provider="msft_v4"):
+    if provider == 'msft_v4':
+        with open("processed_metadata/rev_dns_mappings.json") as fi:
+            rev_dns_map = json.load(fi)
+    else:
+        assert provider == 'apple'
+        with open("processed_metadata/rev_dns_mappings_apple.json") as fi:
+            rev_dns_map = json.load(fi)
+    return rev_dns_map
+
+def get_ww_map(provider="msft_v4"):
+    if provider == 'msft_v4':
+        with open("processed_metadata/ip_to_ww.json") as fi:
+            ww_map = json.load(fi)
+    else:
+        assert provider == 'apple'
+        with open("processed_metadata/ip_to_ww.json") as fi:
+            ww_map = json.load(fi)
 
 dst_asn_to_edgecache_mapping = {}   
 dst_asn_to_edgecache_mapping_failed = {}

@@ -2,12 +2,12 @@ import json
 import socket
 import pdb
 import csv
-
-dirname = "/nfs/kenny/data1/rachee/multicdn/raw_data/msft_v4/%d/%d"
+provider_name = raw_input("Enter CDN provider name (e.g.: msft_v4, msft_v6, apple): ")
+dirname = "/nfs/kenny/data1/rachee/multicdn/raw_data/%s/%d/%d"
 rev_dns_mapping = {}
 for year in [2015,2016,2017,2018]:
     for month in range(1,13):
-        fname = dirname % (year,month)
+        fname = dirname % (provider_name,year,month)
         with open(fname) as fi:
             reader = csv.reader(fi)
             for row in reader:
@@ -21,6 +21,8 @@ for year in [2015,2016,2017,2018]:
                     rev_dns = None
                 rev_dns_mapping[dst_addr] = rev_dns
                 print dst_addr, rev_dns
-            
-with open("preprocessed_metadata/rev_dns_mappings.json", "w") as fi:
-    json.dump(rev_dns_mapping, fi)
+try: 
+    with open("processed_metadata/rev_dns_mappings_%s.json" % provider_name, "w") as fi:
+        json.dump(rev_dns_mapping, fi)
+except:
+    pdb.set_trace()
